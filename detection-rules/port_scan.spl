@@ -1,0 +1,12 @@
+# Port Scan Detection
+# MITRE ATT&CK : T1046 — Network Service Discovery (Reconnaissance)
+# Severity : MEDIUM
+# Log Source : syslog (firewall block events)
+# Trigger : More than 2 distinct ports scanned from same IP
+
+index=main sourcetype=syslog
+| rex field=_raw "SRC=(?<src_ip>\d+\.\d+\.\d+\.\d+).*DPT=(?<dest_port>\d+)"
+| stats dc(dest_port) as ports_scanned by src_ip
+| where ports_scanned > 2
+| eval severity="MEDIUM", attack="Port Scan", mitre_id="T1046"
+| table src_ip, ports_scanned, severity, attack, mitre_id
