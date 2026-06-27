@@ -1,0 +1,13 @@
+# SQL Injection Detection
+# MITRE ATT&CK : T1190 — Exploit Public-Facing Application (Initial Access)
+# Severity : HIGH
+# Log Source : /var/log/apache2/access.log
+# Trigger : SQL injection pattern detected in request URI
+
+index=main source="/var/log/apache2/access.log"
+| rex field=_raw "^(?<src_ip>\d+\.\d+\.\d+\.\d+)"
+| rex field=_raw "\"GET (?<uri>/[^\s]+)\s"
+| search uri="*'*" OR uri="*--*" OR uri="*OR*" OR uri="*union*" OR uri="*select*"
+| stats count by src_ip, uri
+| eval severity="HIGH", attack="SQL Injection", mitre_id="T1190"
+| table src_ip, uri, count, severity, attack, mitre_id
