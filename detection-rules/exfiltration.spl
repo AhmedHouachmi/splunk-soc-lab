@@ -1,0 +1,14 @@
+# File Exfiltration Detection
+# MITRE ATT&CK : T1041 — Exfiltration Over Web Service (Exfiltration)
+# Severity : MEDIUM
+# Log Source : /var/log/apache2/access.log
+# Trigger : Total bytes transferred from single IP exceeds threshold
+
+index=main source="/var/log/apache2/access.log"
+| rex field=_raw "^(?<src_ip>\d+\.\d+\.\d+\.\d+)"
+| rex field=_raw "\" \d{3} (?<bytes>\d+)"
+| stats sum(bytes) as total_bytes, count as requests by src_ip
+| where total_bytes > 1000
+| eval total_mb=round(total_bytes/1024/1024, 2)
+| eval severity="MEDIUM", attack="Possible Exfiltration", mitre_id="T1041"
+| table src_ip, requests, total_mb, severity, attack, mitre_id
