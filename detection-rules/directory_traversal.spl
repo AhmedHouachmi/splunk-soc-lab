@@ -1,0 +1,13 @@
+# Directory Traversal / LFI Detection
+# MITRE ATT&CK : T1083 — File and Directory Discovery (Discovery)
+# Severity : HIGH
+# Log Source : /var/log/apache2/access.log
+# Trigger : Path traversal patterns or sensitive file access detected in URI
+
+index=main source="/var/log/apache2/access.log"
+| rex field=_raw "^(?<src_ip>\d+\.\d+\.\d+\.\d+)"
+| rex field=_raw "\"GET (?<uri>/[^\s]+)\""
+| search uri="*../*" OR uri="*etc/passwd*" OR uri="*etc/shadow*"
+| stats count by src_ip, uri
+| eval severity="HIGH", attack="Directory Traversal", mitre_id="T1083"
+| table src_ip, uri, count, severity, attack, mitre_id
