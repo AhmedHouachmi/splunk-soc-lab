@@ -1,0 +1,13 @@
+# SSH Brute Force Detection
+# MITRE ATT&CK : T1110 — Brute Force (Credential Access)
+# Severity : HIGH
+# Log Source : /var/log/auth.log
+# Trigger : More than 5 failed SSH logins from same IP
+
+index=main source="/var/log/auth.log" "Failed password"
+| rex field=_raw "Failed password for (?:invalid user )?(?<user>\w+) from (?<src_ip>\d+\.\d+\.\d+\.\d+)"
+| stats count by src_ip, user
+| where count > 5
+| sort -count
+| eval severity="HIGH", attack="SSH Brute Force", mitre_id="T1110"
+| table src_ip, user, count, severity, attack, mitre_id
